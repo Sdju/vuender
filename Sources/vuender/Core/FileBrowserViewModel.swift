@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import AppKit
 
 
 @MainActor
@@ -55,6 +56,32 @@ class FileBrowserViewModel: ObservableObject {
     
     func canNavigateUp() -> Bool {
         return fileService.getParentDirectory(of: currentDirectory) != nil
+    }
+    
+    func openFile(_ fileItem: FileItem) {
+        if fileItem.isDirectory {
+            // Для директорий - открываем в текущем приложении
+            navigateTo(fileItem)
+        } else {
+            // Для файлов - открываем через стандартный обработчик системы
+            fileService.openFile(at: fileItem.url)
+        }
+    }
+    
+    func copyFile(_ fileItem: FileItem) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([fileItem.url as NSPasteboardWriting])
+    }
+    
+    func deleteFile(_ fileItem: FileItem) {
+        do {
+            try fileService.deleteFile(at: fileItem.url)
+            loadFiles() // Обновляем список после удаления
+        } catch {
+            print("Ошибка удаления файла: \(error)")
+            // В будущем можно добавить показ алерта с ошибкой
+        }
     }
 }
 

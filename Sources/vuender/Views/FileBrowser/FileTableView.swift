@@ -21,6 +21,9 @@ struct FileTableView: View {
             FileNameView(file: file) {
                 viewModel.navigateTo(file)
             }
+            .contextMenu {
+                FileContextMenu(file: file, viewModel: viewModel)
+            }
         }
         .width(min: 200, ideal: 300)
     }
