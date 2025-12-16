@@ -12,7 +12,7 @@ struct NavigationBar: View {
                 }
             )
 
-            PathDisplay(path: viewModel.currentDirectory.path)
+            PathInputView(viewModel: viewModel)
 
             Spacer()
         }

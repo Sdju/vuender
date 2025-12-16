@@ -83,5 +83,16 @@ class FileBrowserViewModel: ObservableObject {
             // В будущем можно добавить показ алерта с ошибкой
         }
     }
+    
+    func navigateToPath(_ path: String) {
+        let autocompleteService = PathAutocompleteService.shared
+        if let url = autocompleteService.validatePath(path) {
+            currentDirectory = url
+            loadFiles()
+        } else {
+            print("Неверный путь: \(path)")
+            // В будущем можно добавить показ алерта с ошибкой
+        }
+    }
 }
 
