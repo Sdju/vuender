@@ -13,6 +13,7 @@ struct FileNameView: View {
             Text(file.name)
                 .font(.system(size: 13))
         }
+        .opacity(file.isHidden ? 0.7 : 1.0)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()

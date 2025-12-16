@@ -8,6 +8,7 @@ struct FileItem: Identifiable, Equatable {
     let size: Int64
     let modificationDate: Date?
     let fileType: String
+    let isHidden: Bool
     
     init(url: URL, resourceValues: URLResourceValues?) {
         self.url = url
@@ -17,6 +18,8 @@ struct FileItem: Identifiable, Equatable {
         self.size = Int64(resourceValues?.fileSize ?? 0)
         self.modificationDate = resourceValues?.contentModificationDate
         self.fileType = url.pathExtension.isEmpty ? (isDirectory ? "Папка" : "") : url.pathExtension.uppercased()
+        // Файл считается скрытым, если его имя начинается с точки
+        self.isHidden = url.lastPathComponent.hasPrefix(".")
     }
     
     // Форматированный размер файла

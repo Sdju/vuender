@@ -17,7 +17,7 @@ final class FileManagerService: @unchecked Sendable {
             let urls = try fileManager.contentsOfDirectory(
                 at: directory,
                 includingPropertiesForKeys: keys,
-                options: [.skipsHiddenFiles]
+                options: []
             )
             
             return urls.compactMap { url -> FileItem? in
