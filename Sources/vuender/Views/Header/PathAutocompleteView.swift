@@ -2,12 +2,13 @@ import SwiftUI
 
 struct PathAutocompleteView: View {
     let suggestions: [String]
+    let selectedIndex: Int
     let onSelect: (String) -> Void
     
     var body: some View {
         if !suggestions.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(suggestions, id: \.self) { suggestion in
+                ForEach(Array(suggestions.enumerated()), id: \.element) { index, suggestion in
                     Button(action: {
                         onSelect(suggestion)
                     }) {
@@ -28,7 +29,7 @@ struct PathAutocompleteView: View {
                         .padding(.vertical, 4)
                     }
                     .buttonStyle(.plain)
-                    .background(Color(NSColor.controlBackgroundColor))
+                    .background(index == selectedIndex ? Color(NSColor.selectedControlColor) : Color(NSColor.controlBackgroundColor))
                     
                     if suggestion != suggestions.last {
                         Divider()

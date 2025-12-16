@@ -5,6 +5,7 @@ struct PathInputView: View {
     @State private var isEditing = false
     @State private var inputText = ""
     @State private var suggestions: [String] = []
+    @State private var selectedSuggestionIndex: Int = -1
     @FocusState private var isFocused: Bool
     
     private let autocompleteService = PathAutocompleteService.shared
@@ -42,17 +43,39 @@ struct PathInputView: View {
                 .focused($isFocused)
                 .onChange(of: inputText) { _, newValue in
                     updateSuggestions(for: newValue)
+                    selectedSuggestionIndex = -1
                 }
                 .onSubmit {
-                    navigateToPath()
+                    if selectedSuggestionIndex >= 0 && selectedSuggestionIndex < suggestions.count {
+                        navigateToPath(suggestions[selectedSuggestionIndex])
+                    } else {
+                        navigateToPath()
+                    }
                 }
                 .onKeyPress(.escape) {
                     cancelEditing()
                     return .handled
                 }
+                .onKeyPress(.downArrow) {
+                    if !suggestions.isEmpty {
+                        selectedSuggestionIndex = min(selectedSuggestionIndex + 1, suggestions.count - 1)
+                        return .handled
+                    }
+                    return .ignored
+                }
+                .onKeyPress(.upArrow) {
+                    if !suggestions.isEmpty {
+                        selectedSuggestionIndex = max(selectedSuggestionIndex - 1, -1)
+                        return .handled
+                    }
+                    return .ignored
+                }
             
             if !suggestions.isEmpty {
-                PathAutocompleteView(suggestions: suggestions) { selectedPath in
+                PathAutocompleteView(
+                    suggestions: suggestions,
+                    selectedIndex: selectedSuggestionIndex
+                ) { selectedPath in
                     inputText = selectedPath
                     navigateToPath(selectedPath)
                 }
@@ -70,12 +93,14 @@ struct PathInputView: View {
         isEditing = true
         inputText = viewModel.currentDirectory.path
         suggestions = []
+        selectedSuggestionIndex = -1
     }
     
     private func cancelEditing() {
         isEditing = false
         inputText = ""
         suggestions = []
+        selectedSuggestionIndex = -1
     }
     
     private func updateSuggestions(for text: String) {

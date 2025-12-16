@@ -3,17 +3,17 @@ import Foundation
 final class PathAutocompleteService: @unchecked Sendable {
     static let shared = PathAutocompleteService()
     private let fileManager = FileManager.default
-    
+
     private init() {}
-    
+
     func autocomplete(_ input: String) -> [String] {
         guard !input.isEmpty else { return [] }
-        
+
         let trimmedInput = input.trimmingCharacters(in: .whitespaces)
         var baseURL: URL
         var searchTerm: String
         var isAbsolute = false
-        
+
         // Обрабатываем разные форматы путей
         if trimmedInput.hasPrefix("/") {
             // Абсолютный путь
@@ -26,7 +26,7 @@ final class PathAutocompleteService: @unchecked Sendable {
                 // Находим существующую часть пути
                 var existingPath = "/"
                 var remainingComponents: [String] = []
-                
+
                 for component in components {
                     let testPath = existingPath + (existingPath == "/" ? "" : "/") + component
                     if fileManager.fileExists(atPath: testPath) {
@@ -36,7 +36,7 @@ final class PathAutocompleteService: @unchecked Sendable {
                         break
                     }
                 }
-                
+
                 baseURL = URL(fileURLWithPath: existingPath)
                 searchTerm = remainingComponents.joined(separator: "/")
             }
@@ -49,14 +49,12 @@ final class PathAutocompleteService: @unchecked Sendable {
                 searchTerm = ""
             } else {
                 let pathAfterTilde = String(trimmedInput.dropFirst())
-                let fullPath = homePath + pathAfterTilde
-                let url = URL(fileURLWithPath: fullPath)
-                
+
                 // Находим существующую часть
                 var existingPath = homePath
                 let components = pathAfterTilde.split(separator: "/")
                 var remainingComponents: [String] = []
-                
+
                 for component in components {
                     let testPath = existingPath + "/" + component
                     if fileManager.fileExists(atPath: testPath) {
@@ -66,7 +64,7 @@ final class PathAutocompleteService: @unchecked Sendable {
                         break
                     }
                 }
-                
+
                 baseURL = URL(fileURLWithPath: existingPath)
                 searchTerm = remainingComponents.joined(separator: "/")
             }
@@ -75,7 +73,7 @@ final class PathAutocompleteService: @unchecked Sendable {
             baseURL = fileManager.homeDirectoryForCurrentUser
             searchTerm = trimmedInput
         }
-        
+
         // Получаем содержимое директории
         guard let directoryContents = try? fileManager.contentsOfDirectory(
             at: baseURL,
@@ -84,7 +82,7 @@ final class PathAutocompleteService: @unchecked Sendable {
         ) else {
             return []
         }
-        
+
         // Фильтруем только директории и по поисковому запросу
         let lowerSearchTerm = searchTerm.lowercased()
         let matchingDirs = directoryContents
@@ -92,14 +90,14 @@ final class PathAutocompleteService: @unchecked Sendable {
                 var isDir: ObjCBool = false
                 guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir),
                       isDir.boolValue else { return false }
-                
+
                 if lowerSearchTerm.isEmpty {
                     return true
                 }
                 return url.lastPathComponent.lowercased().hasPrefix(lowerSearchTerm)
             }
             .prefix(10)
-        
+
         // Формируем полные пути
         var suggestions: [String] = []
         for item in matchingDirs {
@@ -111,16 +109,16 @@ final class PathAutocompleteService: @unchecked Sendable {
                 suggestions.append(item.lastPathComponent)
             }
         }
-        
+
         return suggestions.sorted()
     }
-    
+
     func validatePath(_ path: String) -> URL? {
         let trimmedPath = path.trimmingCharacters(in: .whitespaces)
         guard !trimmedPath.isEmpty else { return nil }
-        
+
         var normalizedPath: String
-        
+
         // Заменяем ~ на домашнюю директорию
         if trimmedPath.hasPrefix("~") {
             let homePath = fileManager.homeDirectoryForCurrentUser.path
@@ -137,16 +135,16 @@ final class PathAutocompleteService: @unchecked Sendable {
             let homePath = fileManager.homeDirectoryForCurrentUser.path
             normalizedPath = homePath + "/" + trimmedPath
         }
-        
+
         // Нормализуем путь (убираем .. и .)
         let url = URL(fileURLWithPath: normalizedPath).standardizedFileURL
         var isDirectory: ObjCBool = false
-        
+
         // Проверяем, существует ли путь и является ли он директорией
         if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue {
             return url
         }
-        
+
         return nil
     }
 }

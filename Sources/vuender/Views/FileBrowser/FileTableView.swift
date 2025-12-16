@@ -2,9 +2,10 @@ import SwiftUI
 
 struct FileTableView: View {
     @ObservedObject var viewModel: FileBrowserViewModel
+    @State private var selectedFileID: FileItem.ID?
 
     var body: some View {
-        Table(viewModel.files, selection: .constant(nil), sortOrder: $viewModel.sortOrder) {
+        Table(viewModel.files, selection: $selectedFileID, sortOrder: $viewModel.sortOrder) {
             nameColumn
             sizeColumn
             dateColumn
@@ -13,6 +14,14 @@ struct FileTableView: View {
         .tableStyle(.inset)
         .onChange(of: viewModel.sortOrder) { _, _ in
             viewModel.loadFiles()
+        }
+        .onKeyPress(.return) {
+            if let selectedID = selectedFileID,
+               let file = viewModel.files.first(where: { $0.id == selectedID }) {
+                viewModel.navigateTo(file)
+                return .handled
+            }
+            return .ignored
         }
     }
 
