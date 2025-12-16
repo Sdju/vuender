@@ -1,0 +1,82 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "swift",
+			"args": [
+				"build",
+				"--build-tests",
+				"-Xswiftc",
+				"-diagnostic-style=llvm"
+			],
+			"env": {},
+			"cwd": "/Users/zede/home/pr/my/vuender/vuender",
+			"disableTaskQueue": true,
+			"showBuildStatus": "swiftStatus",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "swift: Build All",
+			"detail": "swift build --build-tests -Xswiftc -diagnostic-style=llvm"
+		},
+		{
+			"type": "shell",
+			"command": "swift",
+			"args": [
+				"build",
+				"-c",
+				"debug"
+			],
+			"options": {
+				"cwd": "/Users/zede/home/pr/my/vuender/vuender"
+			},
+			"group": "build",
+			"label": "swift: Build Debug vuender",
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"command": "swift",
+			"args": [
+				"build",
+				"-c",
+				"release"
+			],
+			"options": {
+				"cwd": "/Users/zede/home/pr/my/vuender/vuender"
+			},
+			"group": "build",
+			"label": "swift: Build Release vuender",
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"command": "swift",
+			"args": [
+				"run",
+				"vuender"
+			],
+			"options": {
+				"cwd": "/Users/zede/home/pr/my/vuender/vuender"
+			},
+			"group": "none",
+			"label": "swift: Run vuender",
+			"problemMatcher": [],
+			"detail": "Запускает SwiftUI приложение"
+		},
+		{
+			"type": "shell",
+			"command": "open",
+			"args": [
+				"${workspaceFolder}/.build/debug/vuender"
+			],
+			"options": {
+				"cwd": "/Users/zede/home/pr/my/vuender/vuender"
+			},
+			"group": "none",
+			"label": "swift: Run vuender (GUI)",
+			"problemMatcher": [],
+			"detail": "Запускает SwiftUI приложение как GUI приложение",
+			"dependsOn": "swift: Build Debug vuender"
+		}
+	]
+}

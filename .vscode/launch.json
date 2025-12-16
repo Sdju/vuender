@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:vuender}",
+      "name": "Debug vuender",
+      "program": "${workspaceFolder:vuender}/.build/debug/vuender",
+      "preLaunchTask": "swift: Build Debug vuender"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:vuender}",
+      "name": "Release vuender",
+      "program": "${workspaceFolder:vuender}/.build/release/vuender",
+      "preLaunchTask": "swift: Build Release vuender"
+    }
+  ]
+}
