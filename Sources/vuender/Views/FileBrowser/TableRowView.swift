@@ -53,7 +53,6 @@ struct TableRowView: View {
     }
 
     private func createDragProvider() -> NSItemProvider {
-        // Если текущий файл выбран, перетаскиваем все выбранные файлы
         let filesToDrag: [FileItem]
         if selectedFileIDs.contains(file.id) && selectedFileIDs.count > 1 {
             filesToDrag = files.filter { selectedFileIDs.contains($0.id) }
@@ -61,14 +60,10 @@ struct TableRowView: View {
             filesToDrag = [file]
         }
 
-        // Создаем массив URL для перетаскивания
         let urls = filesToDrag.map { $0.url }
 
-        // Создаем NSItemProvider с массивом URL
         let provider = NSItemProvider()
 
-        // Регистрируем объекты для перетаскивания
-        // Для каждого URL создаем отдельный провайдер, но используем первый для основного
         if let firstURL = urls.first {
             provider.registerDataRepresentation(forTypeIdentifier: "public.file-url", visibility: .all) { completion in
                 if let data = firstURL.absoluteString.data(using: .utf8) {
@@ -80,7 +75,6 @@ struct TableRowView: View {
             }
         }
 
-        // Регистрируем как NSPasteboardWriting для поддержки множественных файлов
         let pasteboardWriter = FileItemPasteboardWriter(urls: urls)
         provider.registerObject(pasteboardWriter, visibility: .all)
 

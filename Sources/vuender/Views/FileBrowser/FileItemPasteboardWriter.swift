@@ -20,7 +20,6 @@ class FileItemPasteboardWriter: NSObject, NSItemProviderWriting {
                     completionHandler(nil, NSError(domain: "FileItemPasteboardWriter", code: 1))
                 }
             } else {
-                // Для множественных файлов создаем список
                 let urlStrings = urls.map { $0.absoluteString }
                 let data = urlStrings.joined(separator: "\n").data(using: .utf8)
                 completionHandler(data, nil)

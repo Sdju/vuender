@@ -20,11 +20,20 @@ class FileBrowserViewModel: ObservableObject {
 
     private let fileService = FileManagerService.shared
 
-    init() {
-        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser
-        self.currentDirectory = homeDirectory
-        history.append(homeDirectory)
-        currentHistoryIndex = 0
+    init(initialPath: String? = nil) {
+        let autocompleteService = PathAutocompleteService.shared
+
+        if let path = initialPath, let url = autocompleteService.validatePath(path) {
+            self.currentDirectory = url
+            history.append(url)
+            currentHistoryIndex = 0
+        } else {
+            let homeDirectory = FileManager.default.homeDirectoryForCurrentUser
+            self.currentDirectory = homeDirectory
+            history.append(homeDirectory)
+            currentHistoryIndex = 0
+        }
+
         loadFiles()
     }
 
@@ -143,7 +152,6 @@ class FileBrowserViewModel: ObservableObject {
         let group = DispatchGroup()
 
         for provider in providers {
-            // Проверяем, что провайдер может предоставить файл
             if provider.hasItemConformingToTypeIdentifier("public.file-url") {
                 hasValidFiles = true
                 group.enter()
@@ -155,10 +163,8 @@ class FileBrowserViewModel: ObservableObject {
                         return
                     }
 
-                    // Обрабатываем данные
                     if let data = data as? Data,
                        let urlString = String(data: data, encoding: .utf8) {
-                        // Может быть один URL или несколько, разделенных новой строкой
                         let urlStrings = urlString.components(separatedBy: "\n").filter { !$0.isEmpty }
 
                         for urlString in urlStrings {
@@ -173,7 +179,6 @@ class FileBrowserViewModel: ObservableObject {
                             }
                         }
                     } else if let url = data as? URL {
-                        // Прямой URL объект
                         Task { @MainActor in
                             do {
                                 try self.fileService.moveFile(at: url, to: self.currentDirectory)
@@ -186,7 +191,6 @@ class FileBrowserViewModel: ObservableObject {
             }
         }
 
-        // Обновляем список файлов после завершения всех операций
         group.notify(queue: .main) {
             self.loadFiles()
         }

@@ -34,7 +34,6 @@ final class FileManagerService: @unchecked Sendable {
 
     func getParentDirectory(of url: URL) -> URL? {
         let parent = url.deletingLastPathComponent()
-        // Проверяем, что не поднялись выше корня
         if parent.path == url.path {
             return nil
         }
@@ -82,12 +81,10 @@ final class FileManagerService: @unchecked Sendable {
         let fileName = sourceURL.lastPathComponent
         let destinationURL = destinationDirectory.appendingPathComponent(fileName)
 
-        // Проверяем, что не перемещаем файл в самого себя (если это директория)
         if sourceURL == destinationURL {
             return
         }
 
-        // Проверяем, что не перемещаем директорию внутрь самой себя
         if sourceURL.hasDirectoryPath {
             let sourcePath = sourceURL.path
             let destinationPath = destinationURL.path
@@ -96,7 +93,6 @@ final class FileManagerService: @unchecked Sendable {
             }
         }
 
-        // Если файл уже существует в месте назначения, создаем уникальное имя
         var finalDestination = destinationURL
         var counter = 1
         while fileManager.fileExists(atPath: finalDestination.path) {
