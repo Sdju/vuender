@@ -46,7 +46,6 @@ final class FileManagerService: @unchecked Sendable {
     }
 
     func copyFile(at sourceURL: URL, to destinationURL: URL) throws {
-        // Если файл с таким именем уже существует, добавляем номер
         var finalDestination = destinationURL
         var counter = 1
         while fileManager.fileExists(atPath: finalDestination.path) {
@@ -68,12 +67,10 @@ final class FileManagerService: @unchecked Sendable {
         let parentDirectory = url.deletingLastPathComponent()
         let newURL = parentDirectory.appendingPathComponent(newName)
 
-        // Проверяем, что новое имя не пустое
         guard !newName.trimmingCharacters(in: .whitespaces).isEmpty else {
             throw NSError(domain: "FileManagerService", code: 1, userInfo: [NSLocalizedDescriptionKey: "Имя файла не может быть пустым"])
         }
 
-        // Проверяем, что файл с таким именем не существует
         if fileManager.fileExists(atPath: newURL.path) {
             throw NSError(domain: "FileManagerService", code: 2, userInfo: [NSLocalizedDescriptionKey: "Файл с таким именем уже существует"])
         }

@@ -14,16 +14,13 @@ final class PathAutocompleteService: @unchecked Sendable {
         var searchTerm: String
         var isAbsolute = false
 
-        // Обрабатываем разные форматы путей
         if trimmedInput.hasPrefix("/") {
-            // Абсолютный путь
             isAbsolute = true
             let components = trimmedInput.split(separator: "/")
             if components.isEmpty {
                 baseURL = URL(fileURLWithPath: "/")
                 searchTerm = ""
             } else {
-                // Находим существующую часть пути
                 var existingPath = "/"
                 var remainingComponents: [String] = []
 
@@ -41,7 +38,6 @@ final class PathAutocompleteService: @unchecked Sendable {
                 searchTerm = remainingComponents.joined(separator: "/")
             }
         } else if trimmedInput.hasPrefix("~") {
-            // Путь с тильдой
             isAbsolute = true
             let homePath = fileManager.homeDirectoryForCurrentUser.path
             if trimmedInput == "~" {
@@ -50,7 +46,6 @@ final class PathAutocompleteService: @unchecked Sendable {
             } else {
                 let pathAfterTilde = String(trimmedInput.dropFirst())
 
-                // Находим существующую часть
                 var existingPath = homePath
                 let components = pathAfterTilde.split(separator: "/")
                 var remainingComponents: [String] = []
@@ -69,12 +64,10 @@ final class PathAutocompleteService: @unchecked Sendable {
                 searchTerm = remainingComponents.joined(separator: "/")
             }
         } else {
-            // Относительный путь - используем домашнюю директорию как базу
             baseURL = fileManager.homeDirectoryForCurrentUser
             searchTerm = trimmedInput
         }
 
-        // Получаем содержимое директории
         guard let directoryContents = try? fileManager.contentsOfDirectory(
             at: baseURL,
             includingPropertiesForKeys: [.isDirectoryKey],
@@ -83,7 +76,6 @@ final class PathAutocompleteService: @unchecked Sendable {
             return []
         }
 
-        // Фильтруем только директории и по поисковому запросу
         let lowerSearchTerm = searchTerm.lowercased()
         let matchingDirs = directoryContents
             .filter { url in
@@ -98,14 +90,12 @@ final class PathAutocompleteService: @unchecked Sendable {
             }
             .prefix(10)
 
-        // Формируем полные пути
         var suggestions: [String] = []
         for item in matchingDirs {
             let fullPath = item.path
             if isAbsolute || trimmedInput.hasPrefix("~") {
                 suggestions.append(fullPath)
             } else {
-                // Для относительных путей возвращаем только имя
                 suggestions.append(item.lastPathComponent)
             }
         }
@@ -119,7 +109,6 @@ final class PathAutocompleteService: @unchecked Sendable {
 
         var normalizedPath: String
 
-        // Заменяем ~ на домашнюю директорию
         if trimmedPath.hasPrefix("~") {
             let homePath = fileManager.homeDirectoryForCurrentUser.path
             if trimmedPath == "~" {
@@ -128,19 +117,15 @@ final class PathAutocompleteService: @unchecked Sendable {
                 normalizedPath = homePath + String(trimmedPath.dropFirst())
             }
         } else if trimmedPath.hasPrefix("/") {
-            // Абсолютный путь
             normalizedPath = trimmedPath
         } else {
-            // Относительный путь - относительно домашней директории
             let homePath = fileManager.homeDirectoryForCurrentUser.path
             normalizedPath = homePath + "/" + trimmedPath
         }
 
-        // Нормализуем путь (убираем .. и .)
         let url = URL(fileURLWithPath: normalizedPath).standardizedFileURL
         var isDirectory: ObjCBool = false
 
-        // Проверяем, существует ли путь и является ли он директорией
         if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue {
             return url
         }

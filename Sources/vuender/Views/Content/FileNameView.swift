@@ -35,15 +35,12 @@ struct FileNameView: View {
                 .opacity(file.isHidden ? 0.7 : 1.0)
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) {
-                    // Двойной клик - навигация (отменяет переименование)
                     pendingRename = false
                     isRenaming = false
                     onDoubleTap()
                 }
                 .onTapGesture(count: 1) {
-                    // Одинарный клик по уже выделенному элементу - переименование
                     if isSelected {
-                        // Небольшая задержка, чтобы отличить от двойного клика
                         pendingRename = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             if pendingRename && isSelected && !isRenaming {
