@@ -34,14 +34,6 @@ struct FileRenameView: View {
                 }
                 .onAppear {
                     isFocused = true
-                    // Выделяем имя без расширения для удобства
-                    if !file.isDirectory {
-                        let nameWithoutExtension = file.name.components(separatedBy: ".").first ?? file.name
-                        if let range = newName.range(of: nameWithoutExtension) {
-                            // В SwiftUI TextField нет прямого способа выделить текст,
-                            // но пользователь может легко удалить и ввести новое имя
-                        }
-                    }
                 }
         }
         .opacity(file.isHidden ? 0.7 : 1.0)

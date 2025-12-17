@@ -9,7 +9,7 @@ struct TableRowView: View {
     @Binding private var isCommandPressed: Bool
     @Binding private var lastSelectedIndex: Int?
     let files: [FileItem]
-    
+
     private var fileIndex: Int? {
         files.firstIndex(where: { $0.id == file.id })
     }
@@ -47,43 +47,34 @@ struct TableRowView: View {
                 }
             )
     }
-    
+
     private func handleTap() {
         guard let currentIndex = fileIndex else { return }
-        
+
         let isCurrentlySelected = selectedFileIDs.contains(file.id)
-        
-        // Если элемент уже выделен и не нажаты модификаторы, не меняем выделение
-        // (позволяем FileNameView обработать клик для переименования)
+
         if isCurrentlySelected && !isShiftPressed && !isCommandPressed {
             return
         }
-        
+
         if isShiftPressed {
-            // Диапазонное выделение через Shift
             if let lastIndex = lastSelectedIndex {
-                // Выделяем диапазон от якоря (lastIndex) до текущего элемента
                 let range = lastIndex < currentIndex ? lastIndex...currentIndex : currentIndex...lastIndex
                 var newSelection = isCommandPressed ? selectedFileIDs : Set<FileItem.ID>()
-                
+
                 for index in range {
                     newSelection.insert(files[index].id)
                 }
-                
+
                 selectedFileIDs = newSelection
-                // НЕ обновляем lastSelectedIndex - он остается якорем для следующего Shift-выделения
             } else {
-                // Если нет якоря, устанавливаем текущий элемент как якорь и выделяем только его
                 selectedFileIDs = [file.id]
                 lastSelectedIndex = currentIndex
             }
         } else if isCommandPressed {
-            // Command - переключаем выделение
             if isCurrentlySelected {
                 selectedFileIDs.remove(file.id)
-                // Если удалили элемент, который был якорем, нужно найти новый якорь
                 if lastSelectedIndex == currentIndex {
-                    // Ищем первый выделенный элемент как новый якорь
                     if let firstSelectedID = selectedFileIDs.first,
                        let newAnchorIndex = files.firstIndex(where: { $0.id == firstSelectedID }) {
                         lastSelectedIndex = newAnchorIndex
@@ -93,11 +84,9 @@ struct TableRowView: View {
                 }
             } else {
                 selectedFileIDs.insert(file.id)
-                // Обновляем якорь на только что добавленный элемент
                 lastSelectedIndex = currentIndex
             }
         } else {
-            // Обычное выделение - очищаем и выделяем один элемент
             selectedFileIDs = [file.id]
             lastSelectedIndex = currentIndex
         }

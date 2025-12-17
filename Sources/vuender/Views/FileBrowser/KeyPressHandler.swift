@@ -13,7 +13,6 @@ struct KeyPressHandler: NSViewRepresentable {
     }
     
     func updateNSView(_ nsView: NSView, context: Context) {
-        // Обновление не требуется
     }
 }
 
@@ -25,7 +24,6 @@ class KeyTrackingView: NSView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         
-        // Подписываемся на события клавиатуры
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.flagsChanged]) { [weak self] event in
             self?.handleFlagsChanged(event)
             return event
@@ -35,7 +33,6 @@ class KeyTrackingView: NSView {
     override func viewWillMove(toWindow newWindow: NSWindow?) {
         super.viewWillMove(toWindow: newWindow)
         
-        // Отписываемся при удалении из окна
         if newWindow == nil, let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil

@@ -12,11 +12,18 @@ class FileBrowserViewModel: ObservableObject {
         .init(\.name, order: .forward)
     ]
 
+    private var history: [URL] = []
+    private var currentHistoryIndex: Int = -1
+    @Published var canNavigateBack: Bool = false
+    @Published var canNavigateForward: Bool = false
+
     private let fileService = FileManagerService.shared
 
     init() {
-        // Начинаем с домашней директории пользователя
-        self.currentDirectory = FileManager.default.homeDirectoryForCurrentUser
+        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser
+        self.currentDirectory = homeDirectory
+        history.append(homeDirectory)
+        currentHistoryIndex = 0
         loadFiles()
     }
 
@@ -24,34 +31,64 @@ class FileBrowserViewModel: ObservableObject {
         isLoading = true
         let loadedFiles = fileService.getContents(of: currentDirectory)
 
-        // Сначала разделяем папки и файлы
         let directories = loadedFiles.filter { $0.isDirectory }
         let regularFiles = loadedFiles.filter { !$0.isDirectory }
 
-        // Сортируем каждую группу отдельно
         var sortedDirectories = directories
         var sortedFiles = regularFiles
 
-        // Применяем сортировку к каждой группе
         sortedDirectories.sort(using: sortOrder)
         sortedFiles.sort(using: sortOrder)
 
-        // Объединяем: сначала папки, потом файлы
         files = sortedDirectories + sortedFiles
         isLoading = false
     }
 
     func navigateTo(_ fileItem: FileItem) {
         guard fileItem.isDirectory else { return }
-        currentDirectory = fileItem.url
+        navigateToDirectory(fileItem.url)
+    }
+
+    private func navigateToDirectory(_ url: URL) {
+        if url != currentDirectory {
+            if currentHistoryIndex < history.count - 1 {
+                history.removeSubrange((currentHistoryIndex + 1)...)
+            }
+            history.append(url)
+            currentHistoryIndex = history.count - 1
+            updateNavigationState()
+        }
+        currentDirectory = url
         loadFiles()
     }
 
     func navigateUp() {
         if let parent = fileService.getParentDirectory(of: currentDirectory) {
-            currentDirectory = parent
-            loadFiles()
+            navigateToDirectory(parent)
         }
+    }
+
+    func navigateBack() {
+        guard canNavigateBack, currentHistoryIndex > 0 else { return }
+        currentHistoryIndex -= 1
+        let previousDirectory = history[currentHistoryIndex]
+        currentDirectory = previousDirectory
+        updateNavigationState()
+        loadFiles()
+    }
+
+    func navigateForward() {
+        guard canNavigateForward, currentHistoryIndex < history.count - 1 else { return }
+        currentHistoryIndex += 1
+        let nextDirectory = history[currentHistoryIndex]
+        currentDirectory = nextDirectory
+        updateNavigationState()
+        loadFiles()
+    }
+
+    private func updateNavigationState() {
+        canNavigateBack = currentHistoryIndex > 0
+        canNavigateForward = currentHistoryIndex < history.count - 1
     }
 
     func canNavigateUp() -> Bool {
@@ -60,10 +97,8 @@ class FileBrowserViewModel: ObservableObject {
 
     func openFile(_ fileItem: FileItem) {
         if fileItem.isDirectory {
-            // Для директорий - открываем в текущем приложении
             navigateTo(fileItem)
         } else {
-            // Для файлов - открываем через стандартный обработчик системы
             fileService.openFile(at: fileItem.url)
         }
     }
@@ -77,31 +112,27 @@ class FileBrowserViewModel: ObservableObject {
     func deleteFile(_ fileItem: FileItem) {
         do {
             try fileService.deleteFile(at: fileItem.url)
-            loadFiles() // Обновляем список после удаления
+            loadFiles()
         } catch {
             print("Ошибка удаления файла: \(error)")
-            // В будущем можно добавить показ алерта с ошибкой
         }
     }
 
     func navigateToPath(_ path: String) {
         let autocompleteService = PathAutocompleteService.shared
         if let url = autocompleteService.validatePath(path) {
-            currentDirectory = url
-            loadFiles()
+            navigateToDirectory(url)
         } else {
             print("Неверный путь: \(path)")
-            // В будущем можно добавить показ алерта с ошибкой
         }
     }
 
     func renameFile(_ fileItem: FileItem, to newName: String) {
         do {
             try fileService.renameFile(at: fileItem.url, to: newName)
-            loadFiles() // Обновляем список после переименования
+            loadFiles()
         } catch {
             print("Ошибка переименования файла: \(error)")
-            // В будущем можно добавить показ алерта с ошибкой
         }
     }
 }

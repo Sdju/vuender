@@ -64,9 +64,7 @@ struct FileTableView: View {
                 FileNameView(
                     file: file,
                     isSelected: selectedFileIDs.contains(file.id),
-                    onSingleTap: {
-                        // Выделение обрабатывается в TableRowView
-                    },
+                    onSingleTap: {},
                     onDoubleTap: {
                         viewModel.navigateTo(file)
                     },
@@ -141,20 +139,12 @@ struct FileTableView: View {
     }
 
     private func handleSelectionChange(oldValue: Set<FileItem.ID>, newValue: Set<FileItem.ID>) {
-        // Эта функция вызывается когда Table автоматически изменяет выделение
-        // Мы используем её только для синхронизации lastSelectedIndex в случае,
-        // если выделение изменилось не через TableRowView (например, через клавиатуру)
-
-        // Если выделение было очищено, сбрасываем якорь
         if newValue.isEmpty {
             lastSelectedIndex = nil
             return
         }
 
-        // Обновляем якорь только если это не было сделано через TableRowView
-        // (т.е. когда нет активных модификаторов)
         if !isShiftPressed && !isCommandPressed {
-            // Если выделен один элемент, делаем его якорем
             if newValue.count == 1, let newID = newValue.first {
                 if let currentIndex = viewModel.files.firstIndex(where: { $0.id == newID }) {
                     lastSelectedIndex = currentIndex
