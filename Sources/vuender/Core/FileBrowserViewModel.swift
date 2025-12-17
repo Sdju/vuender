@@ -11,6 +11,7 @@ class FileBrowserViewModel: ObservableObject {
     @Published var sortOrder: [KeyPathComparator<FileItem>] = [
         .init(\.name, order: .forward)
     ]
+    @Published var selectedFileIDs: Set<FileItem.ID> = []
 
     private var history: [URL] = []
     private var currentHistoryIndex: Int = -1
@@ -57,6 +58,7 @@ class FileBrowserViewModel: ObservableObject {
             history.append(url)
             currentHistoryIndex = history.count - 1
             updateNavigationState()
+            selectedFileIDs.removeAll()
         }
         currentDirectory = url
         loadFiles()

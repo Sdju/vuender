@@ -3,7 +3,6 @@ import AppKit
 
 struct FileTableView: View {
     @ObservedObject var viewModel: FileBrowserViewModel
-    @State private var selectedFileIDs: Set<FileItem.ID> = []
     @State private var lastSelectedIndex: Int?
     @State private var isShiftPressed = false
     @State private var isCommandPressed = false
@@ -12,7 +11,7 @@ struct FileTableView: View {
     var body: some View {
         Table(
             of: FileItem.self,
-            selection: $selectedFileIDs,
+            selection: $viewModel.selectedFileIDs,
             sortOrder: $viewModel.sortOrder,
         ) {
             nameColumn
@@ -31,13 +30,13 @@ struct FileTableView: View {
         .onChange(of: viewModel.sortOrder) { _, _ in
             viewModel.loadFiles()
         }
-        .onChange(of: selectedFileIDs) { oldValue, newValue in
+        .onChange(of: viewModel.selectedFileIDs) { oldValue, newValue in
             if !isProgrammaticChange {
                 handleSelectionChange(oldValue: oldValue, newValue: newValue)
             }
         }
         .onKeyPress(.return) {
-            if let firstSelectedID = selectedFileIDs.first,
+            if let firstSelectedID = viewModel.selectedFileIDs.first,
                let file = viewModel.files.first(where: { $0.id == firstSelectedID }) {
                 viewModel.navigateTo(file)
                 return .handled
@@ -55,7 +54,7 @@ struct FileTableView: View {
             TableRowView(
                 file: file,
                 viewModel: viewModel,
-                selectedFileIDs: $selectedFileIDs,
+                selectedFileIDs: $viewModel.selectedFileIDs,
                 isShiftPressed: $isShiftPressed,
                 isCommandPressed: $isCommandPressed,
                 lastSelectedIndex: $lastSelectedIndex,
@@ -63,7 +62,7 @@ struct FileTableView: View {
             ) {
                 FileNameView(
                     file: file,
-                    isSelected: selectedFileIDs.contains(file.id),
+                    isSelected: viewModel.selectedFileIDs.contains(file.id),
                     onSingleTap: {},
                     onDoubleTap: {
                         viewModel.navigateTo(file)
@@ -82,7 +81,7 @@ struct FileTableView: View {
             TableRowView(
                 file: file,
                 viewModel: viewModel,
-                selectedFileIDs: $selectedFileIDs,
+                selectedFileIDs: $viewModel.selectedFileIDs,
                 isShiftPressed: $isShiftPressed,
                 isCommandPressed: $isCommandPressed,
                 lastSelectedIndex: $lastSelectedIndex,
@@ -103,7 +102,7 @@ struct FileTableView: View {
             TableRowView(
                 file: file,
                 viewModel: viewModel,
-                selectedFileIDs: $selectedFileIDs,
+                selectedFileIDs: $viewModel.selectedFileIDs,
                 isShiftPressed: $isShiftPressed,
                 isCommandPressed: $isCommandPressed,
                 lastSelectedIndex: $lastSelectedIndex,
@@ -123,7 +122,7 @@ struct FileTableView: View {
             TableRowView(
                 file: file,
                 viewModel: viewModel,
-                selectedFileIDs: $selectedFileIDs,
+                selectedFileIDs: $viewModel.selectedFileIDs,
                 isShiftPressed: $isShiftPressed,
                 isCommandPressed: $isCommandPressed,
                 lastSelectedIndex: $lastSelectedIndex,

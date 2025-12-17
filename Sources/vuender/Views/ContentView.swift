@@ -8,6 +8,8 @@ struct ContentView: View {
             navigationBar
             Divider()
             fileTable
+            Divider()
+            footer
         }
         .frame(minWidth: 800, minHeight: 500)
     }
@@ -18,6 +20,13 @@ struct ContentView: View {
 
     private var fileTable: some View {
         FileBrowserView(viewModel: viewModel, viewMode: .table)
+    }
+
+    private var footer: some View {
+        FooterView(
+            totalItems: viewModel.files.count,
+            selectedItems: viewModel.selectedFileIDs.count
+        )
     }
 }
 
