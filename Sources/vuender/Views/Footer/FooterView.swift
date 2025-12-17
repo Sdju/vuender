@@ -4,6 +4,7 @@ import AppKit
 struct FooterView: View {
     let totalItems: Int
     let selectedItems: Int
+    @Binding var isTerminalVisible: Bool
 
     var body: some View {
         HStack {
@@ -22,6 +23,15 @@ struct FooterView: View {
             }
 
             Spacer()
+
+            Button(action: { isTerminalVisible.toggle() }) {
+                Label(
+                    isTerminalVisible ? "Скрыть терминал" : "Терминал",
+                    systemImage: isTerminalVisible ? "chevron.down" : "chevron.up"
+                )
+                .font(.system(size: 11))
+            }
+            .buttonStyle(.link)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)

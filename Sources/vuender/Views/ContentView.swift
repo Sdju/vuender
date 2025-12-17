@@ -4,6 +4,7 @@ import AppKit
 struct ContentView: View {
     @StateObject private var viewModel: FileBrowserViewModel
     @Environment(\.openURL) private var openURL
+    @State private var isTerminalVisible: Bool = false
 
     init(initialPath: String? = nil) {
         _viewModel = StateObject(wrappedValue: FileBrowserViewModel(initialPath: initialPath))
@@ -14,6 +15,11 @@ struct ContentView: View {
             navigationBar
             Divider()
             fileTable
+            if isTerminalVisible {
+                Divider()
+                TerminalPanelView()
+                    .frame(minHeight: 180, idealHeight: 220, maxHeight: 320)
+            }
             Divider()
             footer
         }
@@ -41,7 +47,8 @@ struct ContentView: View {
     private var footer: some View {
         FooterView(
             totalItems: viewModel.files.count,
-            selectedItems: viewModel.selectedFileIDs.count
+            selectedItems: viewModel.selectedFileIDs.count,
+            isTerminalVisible: $isTerminalVisible
         )
     }
 }
