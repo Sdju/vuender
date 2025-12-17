@@ -77,5 +77,39 @@ final class FileManagerService: @unchecked Sendable {
 
         try fileManager.moveItem(at: url, to: newURL)
     }
+
+    func moveFile(at sourceURL: URL, to destinationDirectory: URL) throws {
+        let fileName = sourceURL.lastPathComponent
+        let destinationURL = destinationDirectory.appendingPathComponent(fileName)
+
+        // Проверяем, что не перемещаем файл в самого себя (если это директория)
+        if sourceURL == destinationURL {
+            return
+        }
+
+        // Проверяем, что не перемещаем директорию внутрь самой себя
+        if sourceURL.hasDirectoryPath {
+            let sourcePath = sourceURL.path
+            let destinationPath = destinationURL.path
+            if destinationPath.hasPrefix(sourcePath) && destinationPath != sourcePath {
+                throw NSError(domain: "FileManagerService", code: 3, userInfo: [NSLocalizedDescriptionKey: "Нельзя переместить директорию внутрь самой себя"])
+            }
+        }
+
+        // Если файл уже существует в месте назначения, создаем уникальное имя
+        var finalDestination = destinationURL
+        var counter = 1
+        while fileManager.fileExists(atPath: finalDestination.path) {
+            let nameWithoutExtension = destinationURL.deletingPathExtension().lastPathComponent
+            let extension_ = destinationURL.pathExtension
+            let newName = extension_.isEmpty
+                ? "\(nameWithoutExtension) copy \(counter)"
+                : "\(nameWithoutExtension) copy \(counter).\(extension_)"
+            finalDestination = destinationURL.deletingLastPathComponent().appendingPathComponent(newName)
+            counter += 1
+        }
+
+        try fileManager.moveItem(at: sourceURL, to: finalDestination)
+    }
 }
 

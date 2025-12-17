@@ -137,5 +137,61 @@ class FileBrowserViewModel: ObservableObject {
             print("Ошибка переименования файла: \(error)")
         }
     }
+
+    func handleDrop(providers: [NSItemProvider]) -> Bool {
+        var hasValidFiles = false
+        let group = DispatchGroup()
+
+        for provider in providers {
+            // Проверяем, что провайдер может предоставить файл
+            if provider.hasItemConformingToTypeIdentifier("public.file-url") {
+                hasValidFiles = true
+                group.enter()
+                provider.loadItem(forTypeIdentifier: "public.file-url", options: nil) { (data, error) in
+                    defer { group.leave() }
+
+                    if let error = error {
+                        print("Ошибка загрузки файла: \(error)")
+                        return
+                    }
+
+                    // Обрабатываем данные
+                    if let data = data as? Data,
+                       let urlString = String(data: data, encoding: .utf8) {
+                        // Может быть один URL или несколько, разделенных новой строкой
+                        let urlStrings = urlString.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+                        for urlString in urlStrings {
+                            guard let sourceURL = URL(string: urlString) else { continue }
+
+                            Task { @MainActor in
+                                do {
+                                    try self.fileService.moveFile(at: sourceURL, to: self.currentDirectory)
+                                } catch {
+                                    print("Ошибка перемещения файла \(sourceURL.lastPathComponent): \(error)")
+                                }
+                            }
+                        }
+                    } else if let url = data as? URL {
+                        // Прямой URL объект
+                        Task { @MainActor in
+                            do {
+                                try self.fileService.moveFile(at: url, to: self.currentDirectory)
+                            } catch {
+                                print("Ошибка перемещения файла \(url.lastPathComponent): \(error)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Обновляем список файлов после завершения всех операций
+        group.notify(queue: .main) {
+            self.loadFiles()
+        }
+
+        return hasValidFiles
+    }
 }
 

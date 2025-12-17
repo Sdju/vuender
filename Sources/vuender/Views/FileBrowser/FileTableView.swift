@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct FileTableView: View {
     @ObservedObject var viewModel: FileBrowserViewModel
@@ -47,6 +48,9 @@ struct FileTableView: View {
             onShiftChange: { isShiftPressed = $0 },
             onCommandChange: { isCommandPressed = $0 }
         ))
+        .onDrop(of: [.fileURL, UTType(exportedAs: "public.file-url")], isTargeted: nil) { providers in
+            viewModel.handleDrop(providers: providers)
+        }
     }
 
     private var nameColumn: some TableColumnContent<FileItem, KeyPathComparator<FileItem>> {
