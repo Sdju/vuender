@@ -8,73 +8,118 @@ struct FileTableView: View {
     @State private var isShiftPressed = false
     @State private var isCommandPressed = false
     @State private var isProgrammaticChange = false
+    @State private var creationMode: FileCreationMode = .none
 
     var body: some View {
-        Table(
-            of: FileItem.self,
-            selection: $viewModel.selectedFileIDs,
-            sortOrder: $viewModel.sortOrder,
-        ) {
-            nameColumn
-            sizeColumn
-            dateColumn
-            typeColumn
-        } rows: {
-            ForEach(Array(viewModel.files.enumerated()), id: \.element.id) { index, file in
-                TableRow(file)
-                    .contextMenu {
-                        FileContextMenu(file: file, viewModel: viewModel)
-                    }
+        ZStack {
+            Table(
+                of: FileItem.self,
+                selection: $viewModel.selectedFileIDs,
+                sortOrder: $viewModel.sortOrder,
+            ) {
+                nameColumn
+                sizeColumn
+                dateColumn
+                typeColumn
+            } rows: {
+                ForEach(Array(viewModel.files.enumerated()), id: \.element.id) { index, file in
+                    TableRow(file)
+                        .contextMenu {
+                            FileContextMenu(file: file, viewModel: viewModel)
+                        }
+                }
+
+                if creationMode != .none {
+                    TableRow(createPlaceholderFileItem())
+                }
+            }
+            .tableStyle(.inset)
+            .contextMenu {
+                EmptyAreaContextMenu(viewModel: viewModel, creationMode: $creationMode)
+            }
+            .onChange(of: viewModel.sortOrder) { _, _ in
+                viewModel.loadFiles()
+            }
+            .onChange(of: viewModel.selectedFileIDs) { oldValue, newValue in
+                if !isProgrammaticChange {
+                    handleSelectionChange(oldValue: oldValue, newValue: newValue)
+                }
+            }
+            .onKeyPress(.return) {
+                if let firstSelectedID = viewModel.selectedFileIDs.first,
+                   let file = viewModel.files.first(where: { $0.id == firstSelectedID }) {
+                    viewModel.navigateTo(file)
+                    return .handled
+                }
+                return .ignored
+            }
+            .background(KeyPressHandler(
+                onShiftChange: { isShiftPressed = $0 },
+                onCommandChange: { isCommandPressed = $0 }
+            ))
+            .onDrop(of: [.fileURL, UTType(exportedAs: "public.file-url")], isTargeted: nil) { providers in
+                viewModel.handleDrop(providers: providers)
+            }
+            .onChange(of: creationMode) { oldValue, newValue in
+                if newValue != .none {
+                    viewModel.selectedFileIDs.removeAll()
+                }
             }
         }
-        .tableStyle(.inset)
-        .onChange(of: viewModel.sortOrder) { _, _ in
-            viewModel.loadFiles()
-        }
-        .onChange(of: viewModel.selectedFileIDs) { oldValue, newValue in
-            if !isProgrammaticChange {
-                handleSelectionChange(oldValue: oldValue, newValue: newValue)
-            }
-        }
-        .onKeyPress(.return) {
-            if let firstSelectedID = viewModel.selectedFileIDs.first,
-               let file = viewModel.files.first(where: { $0.id == firstSelectedID }) {
-                viewModel.navigateTo(file)
-                return .handled
-            }
-            return .ignored
-        }
-        .background(KeyPressHandler(
-            onShiftChange: { isShiftPressed = $0 },
-            onCommandChange: { isCommandPressed = $0 }
-        ))
-        .onDrop(of: [.fileURL, UTType(exportedAs: "public.file-url")], isTargeted: nil) { providers in
-            viewModel.handleDrop(providers: providers)
-        }
+    }
+
+    private func createPlaceholderFileItem() -> FileItem {
+        // Создаем временный URL с уникальным именем для placeholder
+        let placeholderName = "__CREATING__\(UUID().uuidString)"
+        let placeholderURL = viewModel.currentDirectory.appendingPathComponent(placeholderName)
+
+        // Создаем временный FileItem
+        // Для placeholder isDirectory не критично, так как он используется только для отображения
+        // и мы проверяем creationMode в nameColumn
+        return FileItem(url: placeholderURL, resourceValues: nil)
     }
 
     private var nameColumn: some TableColumnContent<FileItem, KeyPathComparator<FileItem>> {
         TableColumn("Имя", value: \.name) { file in
-            TableRowView(
-                file: file,
-                viewModel: viewModel,
-                selectedFileIDs: $viewModel.selectedFileIDs,
-                isShiftPressed: $isShiftPressed,
-                isCommandPressed: $isCommandPressed,
-                lastSelectedIndex: $lastSelectedIndex,
-                files: viewModel.files
-            ) {
-                FileNameView(
-                    file: file,
-                    isSelected: viewModel.selectedFileIDs.contains(file.id),
-                    onSingleTap: {},
-                    onDoubleTap: {
-                        viewModel.navigateTo(file)
+            if creationMode != .none && file.name.hasPrefix("__CREATING__") {
+                FileNameInputView(
+                    placeholder: creationMode == .file ? "Имя файла" : "Имя директории",
+                    iconName: creationMode == .file ? "doc.fill" : "folder.fill",
+                    iconColor: creationMode == .file ? .gray : .blue,
+                    onSubmit: { name in
+                        if creationMode == .file {
+                            viewModel.createFile(name: name)
+                        } else {
+                            viewModel.createDirectory(name: name)
+                        }
+                        creationMode = .none
                     },
-                    onRename: { newName in
-                        viewModel.renameFile(file, to: newName)
+                    onCancel: {
+                        creationMode = .none
                     }
                 )
+            } else {
+                TableRowView(
+                    file: file,
+                    viewModel: viewModel,
+                    selectedFileIDs: $viewModel.selectedFileIDs,
+                    isShiftPressed: $isShiftPressed,
+                    isCommandPressed: $isCommandPressed,
+                    lastSelectedIndex: $lastSelectedIndex,
+                    files: viewModel.files
+                ) {
+                    FileNameView(
+                        file: file,
+                        isSelected: viewModel.selectedFileIDs.contains(file.id),
+                        onSingleTap: {},
+                        onDoubleTap: {
+                            viewModel.navigateTo(file)
+                        },
+                        onRename: { newName in
+                            viewModel.renameFile(file, to: newName)
+                        }
+                    )
+                }
             }
         }
         .width(min: 200, ideal: 300)

@@ -197,5 +197,32 @@ class FileBrowserViewModel: ObservableObject {
 
         return hasValidFiles
     }
+
+    func createFile(name: String) {
+        do {
+            try fileService.createFile(at: currentDirectory, name: name)
+            loadFiles()
+        } catch {
+            print("Ошибка создания файла: \(error)")
+        }
+    }
+
+    func createDirectory(name: String) {
+        do {
+            try fileService.createDirectory(at: currentDirectory, name: name)
+            loadFiles()
+        } catch {
+            print("Ошибка создания директории: \(error)")
+        }
+    }
+
+    func openTerminal() {
+        fileService.openTerminal(at: currentDirectory)
+    }
+
+    func openInNewWindow(_ fileItem: FileItem) {
+        guard fileItem.isDirectory else { return }
+        WindowManager.shared.openWindow(at: fileItem.url.path, reuseExisting: false)
+    }
 }
 

@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import OSLog
 
 final class FileManagerService: @unchecked Sendable {
     static let shared = FileManagerService()
@@ -106,6 +107,55 @@ final class FileManagerService: @unchecked Sendable {
         }
 
         try fileManager.moveItem(at: sourceURL, to: finalDestination)
+    }
+
+    func createFile(at directory: URL, name: String) throws {
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else {
+            throw NSError(domain: "FileManagerService", code: 4, userInfo: [NSLocalizedDescriptionKey: "Имя файла не может быть пустым"])
+        }
+
+        let fileURL = directory.appendingPathComponent(trimmedName)
+
+        guard !fileManager.fileExists(atPath: fileURL.path) else {
+            throw NSError(domain: "FileManagerService", code: 5, userInfo: [NSLocalizedDescriptionKey: "Файл с таким именем уже существует"])
+        }
+
+        fileManager.createFile(atPath: fileURL.path, contents: nil, attributes: nil)
+    }
+
+    func createDirectory(at directory: URL, name: String) throws {
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmedName.isEmpty else {
+            throw NSError(domain: "FileManagerService", code: 6, userInfo: [NSLocalizedDescriptionKey: "Имя директории не может быть пустым"])
+        }
+
+        let dirURL = directory.appendingPathComponent(trimmedName)
+
+        guard !fileManager.fileExists(atPath: dirURL.path) else {
+            throw NSError(domain: "FileManagerService", code: 7, userInfo: [NSLocalizedDescriptionKey: "Директория с таким именем уже существует"])
+        }
+
+        try fileManager.createDirectory(at: dirURL, withIntermediateDirectories: false, attributes: nil)
+    }
+
+    func openTerminal(at path: URL) {
+        // Используем AppleScript для открытия Terminal с правильной директорией
+        let escapedPath = path.path.replacingOccurrences(of: "'", with: "\\'")
+        let script = """
+        tell application "Terminal"
+            activate
+            do script "cd '\(escapedPath)'"
+        end tell
+        """
+
+        if let appleScript = NSAppleScript(source: script) {
+            var error: NSDictionary?
+            appleScript.executeAndReturnError(&error)
+            if let error = error {
+                print("Ошибка открытия терминала: \(error)")
+            }
+        }
     }
 }
 
