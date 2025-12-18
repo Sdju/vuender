@@ -13,6 +13,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             navigationBar
+                .zIndex(100) // Поднимаем навигацию над таблицей (для overlay подсказок)
             Divider()
             fileTable
             if isTerminalVisible {
