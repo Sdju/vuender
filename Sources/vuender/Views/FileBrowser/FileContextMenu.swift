@@ -18,8 +18,19 @@ struct FileContextMenu: View {
 
             Divider()
 
-            Button("Скопировать") {
-                viewModel.copyFile(file)
+            Menu("Скопировать") {
+                Button("Имя") {
+                    viewModel.copyFileName(file)
+                }
+                Button("Файл") {
+                    viewModel.copyFile(file)
+                }
+                Button("Путь") {
+                    viewModel.copyFilePath(file)
+                }
+                Button("Имя с путём") {
+                    viewModel.copyFileNameWithPath(file)
+                }
             }
 
             Divider()

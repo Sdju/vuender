@@ -120,6 +120,24 @@ class FileBrowserViewModel: ObservableObject {
         pasteboard.writeObjects([fileItem.url as NSPasteboardWriting])
     }
 
+    func copyFileName(_ fileItem: FileItem) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(fileItem.name, forType: .string)
+    }
+
+    func copyFilePath(_ fileItem: FileItem) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(fileItem.url.path, forType: .string)
+    }
+
+    func copyFileNameWithPath(_ fileItem: FileItem) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString("\(fileItem.name) (\(fileItem.url.path))", forType: .string)
+    }
+
     func deleteFile(_ fileItem: FileItem) {
         do {
             try fileService.deleteFile(at: fileItem.url)
