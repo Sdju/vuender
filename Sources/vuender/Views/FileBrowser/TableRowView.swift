@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct TableRowView: View {
     let file: FileItem
@@ -65,7 +66,7 @@ struct TableRowView: View {
         let provider = NSItemProvider()
 
         if let firstURL = urls.first {
-            provider.registerDataRepresentation(forTypeIdentifier: "public.file-url", visibility: .all) { completion in
+            provider.registerDataRepresentation(forTypeIdentifier: UTType.fileURL.identifier, visibility: .all) { completion in
                 if let data = firstURL.absoluteString.data(using: .utf8) {
                     completion(data, nil)
                 } else {

@@ -8,6 +8,7 @@ struct FileTableView: View {
     @State private var isShiftPressed = false
     @State private var isCommandPressed = false
     @State private var isProgrammaticChange = false
+    @State private var isHandlingSelection = false
     @State private var creationMode: FileCreationMode = .none
 
     var body: some View {
@@ -41,8 +42,12 @@ struct FileTableView: View {
                 viewModel.loadFiles()
             }
             .onChange(of: viewModel.selectedFileIDs) { oldValue, newValue in
-                if !isProgrammaticChange {
+                if !isHandlingSelection && !isProgrammaticChange {
+                    isHandlingSelection = true
                     handleSelectionChange(oldValue: oldValue, newValue: newValue)
+                    DispatchQueue.main.async {
+                        self.isHandlingSelection = false
+                    }
                 }
             }
             .onKeyPress(.return) {
@@ -57,7 +62,7 @@ struct FileTableView: View {
                 onShiftChange: { isShiftPressed = $0 },
                 onCommandChange: { isCommandPressed = $0 }
             ))
-            .onDrop(of: [.fileURL, UTType(exportedAs: "public.file-url")], isTargeted: nil) { providers in
+            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
                 viewModel.handleDrop(providers: providers)
             }
             .onChange(of: creationMode) { oldValue, newValue in

@@ -17,8 +17,15 @@ struct ContentView: View {
             fileTable
             if isTerminalVisible {
                 Divider()
-                TerminalPanelView()
-                    .frame(minHeight: 180, idealHeight: 220, maxHeight: 320)
+                TerminalPanelView(
+                    currentDirectory: viewModel.currentDirectory,
+                    onDirectoryChange: { @Sendable url in
+                        Task { @MainActor in
+                            viewModel.navigateToPath(url.path)
+                        }
+                    }
+                )
+                .frame(minHeight: 180, idealHeight: 220, maxHeight: 320)
             }
             Divider()
             footer

@@ -2,15 +2,23 @@ import SwiftUI
 import AppKit
 
 struct TerminalPanelView: View {
+    let currentDirectory: URL
+    let onDirectoryChange: @Sendable (URL) -> Void
     @State private var isRunning: Bool = false
 
     var body: some View {
         VStack(spacing: 8) {
             header
-            SwiftTermView(isRunning: $isRunning)
-                .frame(minHeight: 150)
-                .background(Color(NSColor.textBackgroundColor))
-                .cornerRadius(4)
+            SwiftTermView(
+                isRunning: $isRunning,
+                currentDirectory: currentDirectory,
+                onDirectoryChange: onDirectoryChange,
+                enableDebugLogs: true
+            )
+            .frame(minHeight: 150)
+            .background(Color(NSColor.textBackgroundColor))
+            .cornerRadius(4)
+            .focusable()
         }
         .padding(10)
         .background(Color(NSColor.controlBackgroundColor))
@@ -33,5 +41,3 @@ struct TerminalPanelView: View {
         }
     }
 }
-
-

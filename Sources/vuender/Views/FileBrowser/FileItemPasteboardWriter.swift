@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 
 class FileItemPasteboardWriter: NSObject, NSItemProviderWriting {
     let urls: [URL]
@@ -8,11 +9,11 @@ class FileItemPasteboardWriter: NSObject, NSItemProviderWriting {
     }
 
     static var writableTypeIdentifiersForItemProvider: [String] {
-        return ["public.file-url"]
+        return [UTType.fileURL.identifier]
     }
 
     func loadData(withTypeIdentifier typeIdentifier: String, forItemProviderCompletionHandler completionHandler: @escaping (Data?, Error?) -> Void) -> Progress? {
-        if typeIdentifier == "public.file-url" {
+        if typeIdentifier == UTType.fileURL.identifier {
             if urls.count == 1, let url = urls.first {
                 if let data = url.absoluteString.data(using: .utf8) {
                     completionHandler(data, nil)
