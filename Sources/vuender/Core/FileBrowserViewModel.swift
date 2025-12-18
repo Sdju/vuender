@@ -242,5 +242,40 @@ class FileBrowserViewModel: ObservableObject {
         guard fileItem.isDirectory else { return }
         WindowManager.shared.openWindow(at: fileItem.url.path, reuseExisting: false)
     }
+
+    func deleteSelectedFiles() {
+        for fileID in selectedFileIDs {
+            if let file = files.first(where: { $0.id == fileID }) {
+                deleteFile(file)
+            }
+        }
+        selectedFileIDs.removeAll()
+    }
+
+    func copySelectedFiles() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let urls = selectedFileIDs.compactMap { id in
+            files.first(where: { $0.id == id })?.url
+        }
+        pasteboard.writeObjects(urls as [NSPasteboardWriting])
+    }
+
+    func pasteFiles() {
+        let pasteboard = NSPasteboard.general
+        guard let items = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] else {
+            return
+        }
+
+        for sourceURL in items {
+            do {
+                try fileService.copyFile(at: sourceURL, to: currentDirectory)
+            } catch {
+                print("Ошибка копирования файла \(sourceURL.lastPathComponent): \(error)")
+            }
+        }
+        loadFiles()
+    }
+
 }
 

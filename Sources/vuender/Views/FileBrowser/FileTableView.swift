@@ -10,65 +10,93 @@ struct FileTableView: View {
     @State private var isProgrammaticChange = false
     @State private var isHandlingSelection = false
     @State private var creationMode: FileCreationMode = .none
+    @State private var fileToRename: FileItem.ID? = nil
+    @State private var newlyCreatedFileName: String? = nil
 
     var body: some View {
         ZStack {
-            Table(
-                of: FileItem.self,
-                selection: $viewModel.selectedFileIDs,
-                sortOrder: $viewModel.sortOrder,
-            ) {
-                nameColumn
-                sizeColumn
-                dateColumn
-                typeColumn
-            } rows: {
-                ForEach(Array(viewModel.files.enumerated()), id: \.element.id) { index, file in
-                    TableRow(file)
-                        .contextMenu {
-                            FileContextMenu(file: file, viewModel: viewModel)
-                        }
-                }
+            tableWithModifiers
+        }
+    }
 
-                if creationMode != .none {
-                    TableRow(createPlaceholderFileItem())
+    private var tableWithModifiers: some View {
+        tableBase
+            .background(
+                KeyboardShortcutHandler(
+                    viewModel: viewModel,
+                    isCommandPressed: $isCommandPressed,
+                    isShiftPressed: $isShiftPressed,
+                    creationMode: $creationMode,
+                    fileToRename: $fileToRename
+                )
+                .frame(width: 0, height: 0)
+                .allowsHitTesting(false)
+            )
+    }
+
+    private var tableBase: some View {
+        Table(
+            of: FileItem.self,
+            selection: $viewModel.selectedFileIDs,
+            sortOrder: $viewModel.sortOrder,
+        ) {
+            nameColumn
+            sizeColumn
+            dateColumn
+            typeColumn
+        } rows: {
+            ForEach(Array(viewModel.files.enumerated()), id: \.element.id) { index, file in
+                TableRow(file)
+                    .contextMenu {
+                        FileContextMenu(file: file, viewModel: viewModel)
+                    }
+            }
+
+            if creationMode != .none {
+                TableRow(createPlaceholderFileItem())
+            }
+        }
+        .tableStyle(.inset)
+        .contextMenu {
+            EmptyAreaContextMenu(viewModel: viewModel, creationMode: $creationMode)
+        }
+        .onChange(of: viewModel.sortOrder) { _, _ in
+            viewModel.loadFiles()
+        }
+        .onChange(of: viewModel.selectedFileIDs) { oldValue, newValue in
+            if !isHandlingSelection && !isProgrammaticChange {
+                isHandlingSelection = true
+                handleSelectionChange(oldValue: oldValue, newValue: newValue)
+                DispatchQueue.main.async {
+                    self.isHandlingSelection = false
                 }
             }
-            .tableStyle(.inset)
-            .contextMenu {
-                EmptyAreaContextMenu(viewModel: viewModel, creationMode: $creationMode)
-            }
-            .onChange(of: viewModel.sortOrder) { _, _ in
-                viewModel.loadFiles()
-            }
-            .onChange(of: viewModel.selectedFileIDs) { oldValue, newValue in
-                if !isHandlingSelection && !isProgrammaticChange {
-                    isHandlingSelection = true
-                    handleSelectionChange(oldValue: oldValue, newValue: newValue)
-                    DispatchQueue.main.async {
-                        self.isHandlingSelection = false
+        }
+        .onChange(of: viewModel.files) { oldFiles, newFiles in
+            // Если был создан новый файл/папка, активируем режим переименования
+            if let newFileName = newlyCreatedFileName {
+                if let newFile = newFiles.first(where: { $0.name == newFileName }) {
+                    // Проверяем, что файл действительно новый (не был в старом списке)
+                    let wasInOldList = oldFiles.contains(where: { $0.id == newFile.id })
+                    if !wasInOldList {
+                        DispatchQueue.main.async {
+                            fileToRename = newFile.id
+                            newlyCreatedFileName = nil
+                        }
                     }
                 }
             }
-            .onKeyPress(.return) {
-                if let firstSelectedID = viewModel.selectedFileIDs.first,
-                   let file = viewModel.files.first(where: { $0.id == firstSelectedID }) {
-                    viewModel.navigateTo(file)
-                    return .handled
-                }
-                return .ignored
-            }
-            .background(KeyPressHandler(
-                onShiftChange: { isShiftPressed = $0 },
-                onCommandChange: { isCommandPressed = $0 }
-            ))
-            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                viewModel.handleDrop(providers: providers)
-            }
-            .onChange(of: creationMode) { oldValue, newValue in
-                if newValue != .none {
-                    viewModel.selectedFileIDs.removeAll()
-                }
+        }
+        .background(KeyPressHandler(
+            onShiftChange: { isShiftPressed = $0 },
+            onCommandChange: { isCommandPressed = $0 }
+        ))
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            viewModel.handleDrop(providers: providers)
+        }
+        .onChange(of: creationMode) { oldValue, newValue in
+            if newValue != .none {
+                viewModel.selectedFileIDs.removeAll()
             }
         }
     }
@@ -88,6 +116,7 @@ struct FileTableView: View {
                     iconName: creationMode == .file ? "doc.fill" : "folder.fill",
                     iconColor: creationMode == .file ? .gray : .blue,
                     onSubmit: { name in
+                        newlyCreatedFileName = name
                         if creationMode == .file {
                             viewModel.createFile(name: name)
                         } else {
@@ -118,7 +147,11 @@ struct FileTableView: View {
                         },
                         onRename: { newName in
                             viewModel.renameFile(file, to: newName)
-                        }
+                        },
+                        forceRename: Binding(
+                            get: { fileToRename == file.id },
+                            set: { if !$0 { fileToRename = nil } }
+                        )
                     )
                 }
             }
@@ -202,4 +235,6 @@ struct FileTableView: View {
         }
     }
 }
+
+
 

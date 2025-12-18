@@ -6,6 +6,7 @@ struct FileNameView: View {
     let onSingleTap: () -> Void
     let onDoubleTap: () -> Void
     let onRename: (String) -> Void
+    @Binding var forceRename: Bool
 
     @State private var isRenaming = false
     @State private var pendingRename = false
@@ -50,6 +51,12 @@ struct FileNameView: View {
                         }
                     } else {
                         onSingleTap()
+                    }
+                }
+                .onChange(of: forceRename) { oldValue, newValue in
+                    if newValue && isSelected && !oldValue {
+                        isRenaming = true
+                        forceRename = false
                     }
                 }
             }
