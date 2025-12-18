@@ -5,6 +5,7 @@ struct ContentView: View {
     @StateObject private var viewModel: FileBrowserViewModel
     @Environment(\.openURL) private var openURL
     @State private var isTerminalVisible: Bool = false
+    @State private var terminalHeight: CGFloat = 220
 
     init(initialPath: String? = nil) {
         _viewModel = StateObject(wrappedValue: FileBrowserViewModel(initialPath: initialPath))
@@ -13,11 +14,11 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             navigationBar
-                .zIndex(100) // Поднимаем навигацию над таблицей (для overlay подсказок)
+                .zIndex(100)
             Divider()
             fileTable
             if isTerminalVisible {
-                Divider()
+                ResizableDivider(height: $terminalHeight)
                 TerminalPanelView(
                     currentDirectory: viewModel.currentDirectory,
                     onDirectoryChange: { @Sendable url in
@@ -26,7 +27,7 @@ struct ContentView: View {
                         }
                     }
                 )
-                .frame(minHeight: 180, idealHeight: 220, maxHeight: 320)
+                .frame(height: terminalHeight)
             }
             Divider()
             footer

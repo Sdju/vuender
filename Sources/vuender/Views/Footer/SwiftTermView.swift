@@ -80,6 +80,7 @@ struct SwiftTermView: NSViewRepresentable {
                 """
                 terminalView.send(source: terminalView, data: ArraySlice(osc7Setup.utf8))
                 terminalView.send(source: terminalView, data: ArraySlice("cd '\(currentDirectory.path)'\n".utf8))
+                terminalView.send(source: terminalView, data: ArraySlice("clear\n".utf8))
                 self?.lastSyncedDirectory = currentDirectory
                 self?.log("Терминал настроен")
             }

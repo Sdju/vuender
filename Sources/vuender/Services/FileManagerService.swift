@@ -140,7 +140,6 @@ final class FileManagerService: @unchecked Sendable {
     }
 
     func openTerminal(at path: URL) {
-        // Используем AppleScript для открытия Terminal с правильной директорией
         let escapedPath = path.path.replacingOccurrences(of: "'", with: "\\'")
         let script = """
         tell application "Terminal"

@@ -20,7 +20,6 @@ struct PathInputView: View {
             }
         }
         .background {
-            // Невидимый overlay для закрытия dropdown при клике вне его
             if !isEditing, activeDropdownIndex != nil {
                 Color.clear
                     .contentShape(Rectangle())
@@ -30,10 +29,8 @@ struct PathInputView: View {
             }
         }
         .background(alignment: .topLeading) {
-            // Dropdown в background - НЕ влияет на размер родителя!
             if !isEditing, let dropdownIndex = activeDropdownIndex {
                 let segments = PathSegmentHelper.pathSegments(from: viewModel.currentDirectory.path)
-                // Разделитель после сегмента N показывает альтернативы для сегмента N+1
                 let targetSegmentIndex = dropdownIndex + 1
                 if targetSegmentIndex < segments.count {
                     let targetSegment = segments[targetSegmentIndex]
@@ -107,12 +104,9 @@ struct PathInputView: View {
             }
             .onKeyPress(.tab) {
                 if !suggestions.isEmpty {
-                    // Если ничего не выбрано, берем первую подсказку
                     let indexToUse = selectedSuggestionIndex >= 0 ? selectedSuggestionIndex : 0
                     if indexToUse < suggestions.count {
-                        // Просто заполняем текст, но не переходим (как в редакторе)
                         inputText = suggestions[indexToUse]
-                        // Обновляем подсказки для нового текста
                         updateSuggestions(for: inputText)
                         selectedSuggestionIndex = -1
                     }
@@ -121,7 +115,6 @@ struct PathInputView: View {
                 return .ignored
             }
             .overlay(alignment: .topLeading) {
-                // Подсказки как overlay - не влияют на размер родителя (аналог position: absolute в CSS)
                 if !suggestions.isEmpty {
                     PathAutocompleteView(
                         suggestions: suggestions,
@@ -130,9 +123,9 @@ struct PathInputView: View {
                         inputText = selectedPath
                         navigateToPath(selectedPath)
                     }
-                    .padding(.top, 32) // Отступ от текстового поля
+                    .padding(.top, 32)
                     .frame(maxWidth: 500)
-                    .zIndex(1000) // Высокий z-index, чтобы быть поверх таблицы
+                    .zIndex(1000)
                 }
             }
             .frame(maxWidth: 500)

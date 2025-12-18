@@ -74,13 +74,9 @@ struct FileTableView: View {
     }
 
     private func createPlaceholderFileItem() -> FileItem {
-        // Создаем временный URL с уникальным именем для placeholder
         let placeholderName = "__CREATING__\(UUID().uuidString)"
         let placeholderURL = viewModel.currentDirectory.appendingPathComponent(placeholderName)
 
-        // Создаем временный FileItem
-        // Для placeholder isDirectory не критично, так как он используется только для отображения
-        // и мы проверяем creationMode в nameColumn
         return FileItem(url: placeholderURL, resourceValues: nil)
     }
 

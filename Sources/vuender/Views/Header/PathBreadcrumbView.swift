@@ -1,16 +1,13 @@
 import SwiftUI
 import AppKit
 
-/// Helper для работы с сегментами пути
 struct PathSegmentHelper {
     static func pathSegments(from path: String) -> [(name: String, fullPath: String)] {
         var segments: [(name: String, fullPath: String)] = []
         let components = path.split(separator: "/").map(String.init)
 
-        // Корневой сегмент
         segments.append((name: "/", fullPath: "/"))
 
-        // Остальные сегменты
         for (index, component) in components.enumerated() {
             if !component.isEmpty {
                 let fullPath = "/" + components[0...index].joined(separator: "/")
@@ -45,7 +42,6 @@ struct PathSegmentHelper {
     }
 }
 
-/// Breadcrumb навигация как в Windows Explorer
 struct PathBreadcrumbView: View {
     let path: String
     let onNavigate: (String) -> Void
@@ -56,11 +52,9 @@ struct PathBreadcrumbView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Разбиваем путь на сегменты
             let segments = PathSegmentHelper.pathSegments(from: path)
 
             ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
-                // Кнопка сегмента пути
                 PathSegmentButton(
                     title: segment.name,
                     isLast: index == segments.count - 1,
@@ -68,13 +62,11 @@ struct PathBreadcrumbView: View {
                         if index < segments.count - 1 {
                             onNavigate(segment.fullPath)
                         } else {
-                            // Клик на последний сегмент (текущую папку) - включить редактирование
                             onEditRequest()
                         }
                     }
                 )
 
-                // Разделитель с dropdown (кроме последнего элемента)
                 if index < segments.count - 1 {
                     PathSeparatorButton(
                         isActive: activeDropdownIndex == index,
@@ -97,22 +89,19 @@ struct PathBreadcrumbView: View {
         .cornerRadius(4)
         .onChange(of: activeDropdownIndex) { _, newValue in
             if newValue != nil && eventMonitor == nil {
-                // Dropdown открыт - добавляем монитор событий
                 eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                    if event.keyCode == 53 { // 53 = Escape
+                    if event.keyCode == 53 {
                         activeDropdownIndex = nil
-                        return nil // Поглощаем событие
+                        return nil
                     }
                     return event
                 }
             } else if newValue == nil && eventMonitor != nil {
-                // Dropdown закрыт - удаляем монитор
                 NSEvent.removeMonitor(eventMonitor!)
                 eventMonitor = nil
             }
         }
         .onDisappear {
-            // Очистка при уничтожении view
             if let monitor = eventMonitor {
                 NSEvent.removeMonitor(monitor)
                 eventMonitor = nil
@@ -121,7 +110,6 @@ struct PathBreadcrumbView: View {
     }
 }
 
-/// Кнопка сегмента пути
 struct PathSegmentButton: View {
     let title: String
     let isLast: Bool
@@ -155,13 +143,11 @@ struct PathSeparatorButton: View {
 
     var body: some View {
         ZStack {
-            // Увеличенная кликабельная область
             Rectangle()
                 .fill(Color.clear)
                 .frame(width: 28, height: 28)
                 .contentShape(Rectangle())
 
-            // Видимая иконка
             Image(systemName: isActive ? "chevron.up" : "chevron.right")
                 .font(.system(size: 8))
                 .foregroundColor(isHovered ? .blue : .secondary)
@@ -176,7 +162,6 @@ struct PathSeparatorButton: View {
     }
 }
 
-/// Dropdown меню с альтернативными папками
 struct PathDropdownMenu: View {
     let alternatives: [String]
     let onSelect: (String) -> Void
@@ -186,7 +171,6 @@ struct PathDropdownMenu: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Убрали ScrollView для отладки
             VStack(alignment: .leading, spacing: 0) {
                 if alternatives.isEmpty {
                     Text("Нет доступных папок")
