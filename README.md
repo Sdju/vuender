@@ -39,7 +39,7 @@
 
 ## Установка
 
-### Сборка из исходников
+### Сборка из исходников (CLI)
 
 1. Клонируйте репозиторий:
 ```bash
@@ -56,6 +56,23 @@ swift build
 ```bash
 swift run vuender
 ```
+
+### Сборка .dmg образа
+
+Для сборки `.dmg`:
+
+```bash
+chmod +x build-dmg.sh   # один раз
+./build-dmg.sh
+```
+
+Скрипт соберёт релизную версию, создаст минимальный `.app`‑bundle и сгенерирует `.dmg` в корне репозитория с именем:
+
+```text
+Vuender-<VERSION>.dmg
+```
+
+где `VERSION` берётся из `Sources/vuender/Core/AppVersion.swift`.
 
 ### Запуск с указанием пути
 
