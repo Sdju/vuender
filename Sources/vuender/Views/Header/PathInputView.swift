@@ -73,6 +73,11 @@ struct PathInputView: View {
             .background(Color(NSColor.textBackgroundColor))
             .cornerRadius(4)
             .focused($isFocused)
+            .onChange(of: isFocused) { _, newValue in
+                if !newValue {
+                    cancelEditing()
+                }
+            }
             .onChange(of: inputText) { _, newValue in
                 updateSuggestions(for: newValue)
                 selectedSuggestionIndex = -1
