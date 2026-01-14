@@ -6,6 +6,11 @@ struct TerminalPanelView: View {
     let onDirectoryChange: @Sendable (URL) -> Void
     @State private var isRunning: Bool = false
 
+    private var shellDisplayName: String {
+        let shellPath = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        return URL(fileURLWithPath: shellPath).lastPathComponent
+    }
+
     var body: some View {
         VStack(spacing: 8) {
             header
@@ -26,7 +31,7 @@ struct TerminalPanelView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Label("Терминал (zsh)", systemImage: "terminal.fill")
+            Label("Терминал (\(shellDisplayName))", systemImage: "terminal.fill")
                 .font(.system(size: 12))
             if isRunning {
                 Text("работает")
